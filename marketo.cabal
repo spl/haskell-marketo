@@ -1,0 +1,52 @@
+name:                   marketo
+version:                0.0.0
+synopsis:               Implementation of parts of the Marketo REST API
+homepage:               https://www.github.com/docmunch/haskell-marketo
+license:                MIT
+license-file:           LICENSE
+author:                 Sean Leather
+maintainer:             sean@doxiq.com
+copyright:              2014 Daggerboard, Inc.
+category:               Web
+build-type:             Simple
+-- extra-source-files:     README.md
+cabal-version:          >=1.10
+
+library
+  hs-source-dirs:       src
+  ghc-options:          -Wall
+  default-language:     Haskell2010
+  default-extensions:
+                        CPP
+                        DeriveDataTypeable
+                        DeriveFunctor
+                        FlexibleInstances
+                        GeneralizedNewtypeDeriving
+                        LambdaCase
+                        NoImplicitPrelude
+                        OverloadedStrings
+                        RecordWildCards
+                        ScopedTypeVariables
+                        TemplateHaskell
+                        TupleSections
+  exposed-modules:
+                        Web.Marketo
+                        Web.Marketo.Auth
+                        Web.Marketo.Leads
+                        Web.Marketo.Types
+  other-modules:
+                        Web.Marketo.Common
+                        Web.Marketo.Internal
+  build-depends:
+                        aeson >= 0.7,
+                        base >= 4.6 && < 4.8,
+                        bytestring,
+                        http-client >= 0.3,
+                        http-conduit >= 2.0 && < 3.0,
+                        http-types,
+                        mime-types,
+                        template-haskell,
+                        text >= 0.11 && < 2.0,
+                        time,
+                        transformers,
+                        unordered-containers
