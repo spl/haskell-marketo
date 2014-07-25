@@ -17,11 +17,12 @@ apiRequest
   => [ByteString]                     -- ^ Path segments, intercalated with '/'
   -> (Request -> m Request)           -- ^ Modify request
   -> (Response BL.ByteString -> m a)  -- ^ Process response
-  -> Auth                             -- ^ For the REST API domain and access token
+  -> ApiAccess                        -- ^ For the REST API domain
+  -> Auth                             -- ^ For the access token
   -> Manager
   -> m a
-apiRequest pathSegments modifyRequest processResponse Auth {..} mgr =
-  parseUrl (apiDomain authApiAccess : pathSegments)
+apiRequest pathSegments modifyRequest processResponse ApiAccess {..} Auth {..} mgr =
+  parseUrl (apiDomain : pathSegments)
   >>= acceptJSON
   >>= addHeader (hAuthorization, "Bearer " <> authAccessToken)
   >>= modifyRequest
@@ -60,22 +61,19 @@ instance ToJSON ApiAccess where
 
 -- | Authentication information
 data Auth = Auth
-  { authApiAccess    :: !ApiAccess    -- ^ Information needed to access the API
-  , authAccessToken  :: !ByteString   -- ^ OAuth access token
+  { authAccessToken  :: !ByteString   -- ^ OAuth access token
   , authExpiration   :: !UTCTime      -- ^ Expiration time of the access token
   }
   deriving Show
 
 instance FromJSON Auth where
   parseJSON = withObject "Auth" $ \o ->
-    Auth <$> o .:  "api_access"
-         <*> o .:$ "access_token"
+    Auth <$> o .:$ "access_token"
          <*> o .:  "expiration"
 
 instance ToJSON Auth where
   toJSON Auth {..} = object
-    [ "api_access"   .=  authApiAccess
-    , "access_token" .=$ authAccessToken
+    [ "access_token" .=$ authAccessToken
     , "expiration"   .=  authExpiration
     ]
 

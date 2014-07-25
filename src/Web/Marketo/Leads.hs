@@ -19,6 +19,7 @@ import Web.Marketo.Internal
 getLead
   :: MonadIO m
   => LeadId
+  -> ApiAccess
   -> Auth
   -> Manager
   -> m (ApiResponse [Lead])
@@ -38,6 +39,7 @@ createOrUpdateLead
   => LeadAction   -- ^ Action such as 'CreateLead' or 'UpdateLead'
   -> [Lead]       -- ^ List of leads to create/update
   -> Maybe Text   -- ^ Lookup field for updates (e.g. Use "id" to match the leadId)
+  -> ApiAccess
   -> Auth
   -> Manager
   -> m (ApiResponse [Either NoResult LeadId])

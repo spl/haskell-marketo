@@ -19,7 +19,7 @@ getAuth
   => ApiAccess
   -> Manager
   -> m Auth
-getAuth apiAccess@ApiAccess {..} mgr =
+getAuth ApiAccess {..} mgr =
   parseUrl [apiDomain, "identity", "oauth", "token"]
   >>= acceptJSON
   >>= setQuery [ ( "grant_type"    , Just "client_credentials" )
@@ -28,32 +28,34 @@ getAuth apiAccess@ApiAccess {..} mgr =
                ]
   >>= flip httpLbs mgr
   >>= fromJSONResponse "getAuth"
-  >>= mkAuth apiAccess
+  >>= mkAuth
 
 -- | Check if the access token has expired and, if needed, refresh the token.
 -- Return the new 'Auth', if updated.
 refreshAuth
   :: MonadIO m
-  => Auth
+  => ApiAccess
+  -> Auth
   -> Manager
   -> m (Maybe Auth)
-refreshAuth Auth {..} mgr = do
+refreshAuth apiAccess Auth {..} mgr = do
   tm <- liftIO getCurrentTime
   let expired = authExpiration `diffUTCTime` tm < 5 * 60 {- 5 minutes -}
-  if expired then Just `liftM` getAuth authApiAccess mgr else return Nothing
+  if expired then Just `liftM` getAuth apiAccess mgr else return Nothing
 
 -- | Given a function that requires authentication, first refresh the access
 -- token, if needed. Then, run the function argument. Return the new 'Auth', if
 -- updated, along with the result of the argument.
 withRefresh
   :: MonadIO m
-  => (Auth -> Manager -> m a)
+  => (ApiAccess -> Auth -> Manager -> m a)
+  -> ApiAccess
   -> Auth
   -> Manager
   -> m (Maybe Auth, a)
-withRefresh run auth mgr = do
-  mAuth' <- refreshAuth auth mgr
-  result <- run (fromMaybe auth mAuth') mgr
+withRefresh run apiAccess auth mgr = do
+  mAuth' <- refreshAuth apiAccess auth mgr
+  result <- run apiAccess (fromMaybe auth mAuth') mgr
   return (mAuth', result)
 
 --------------------------------------------------------------------------------
@@ -72,7 +74,7 @@ instance FromJSON AccessTokenResponse where
                         <*> o .: "scope"
 
 -- | Construct a new 'Auth'
-mkAuth :: MonadIO m => ApiAccess -> AccessTokenResponse -> m Auth
-mkAuth apiAccess AccessTokenResponse {..} = do
+mkAuth :: MonadIO m => AccessTokenResponse -> m Auth
+mkAuth AccessTokenResponse {..} = do
   tm <- expireTime atrExpiresIn `liftM` liftIO getCurrentTime
-  return $ Auth apiAccess atrAccessToken tm
+  return $ Auth atrAccessToken tm
