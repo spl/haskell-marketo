@@ -2,6 +2,7 @@ module Web.Marketo.Types
   ( ApiAccess(..)
   , Auth(..)
   , ApiResponse(..)
+  , NoResult(..)
   , ErrorMessage(..)
   , Email
   , LeadId(..)
