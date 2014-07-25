@@ -21,7 +21,7 @@ apiRequest
   -> Manager
   -> m a
 apiRequest pathSegments modifyRequest processResponse Auth {..} mgr =
-  parseUrl (apiDomain authApi : pathSegments)
+  parseUrl (apiDomain authApiAccess : pathSegments)
   >>= acceptJSON
   >>= addHeader (hAuthorization, "Bearer " <> authAccessToken)
   >>= modifyRequest
@@ -43,13 +43,41 @@ data ApiAccess = ApiAccess
   }
   deriving Show
 
+instance FromJSON ApiAccess where
+  parseJSON = withObject "ApiAccess" $ \o ->
+    ApiAccess <$> o .:$ "client_id"
+              <*> o .:$ "client_secret"
+              <*> o .:$ "domain"
+
+instance ToJSON ApiAccess where
+  toJSON ApiAccess {..} = object
+    [ "client_id"     .=$ apiClientId
+    , "client_secret" .=$ apiClientSecret
+    , "domain"        .=$ apiDomain
+    ]
+
+--------------------------------------------------------------------------------
+
 -- | Authentication information
 data Auth = Auth
-  { authApi          :: !ApiAccess    -- ^ Information needed to access the API
+  { authApiAccess    :: !ApiAccess    -- ^ Information needed to access the API
   , authAccessToken  :: !ByteString   -- ^ OAuth access token
   , authExpiration   :: !UTCTime      -- ^ Expiration time of the access token
   }
   deriving Show
+
+instance FromJSON Auth where
+  parseJSON = withObject "Auth" $ \o ->
+    Auth <$> o .:  "api_access"
+         <*> o .:$ "access_token"
+         <*> o .:  "expiration"
+
+instance ToJSON Auth where
+  toJSON Auth {..} = object
+    [ "api_access"   .=  authApiAccess
+    , "access_token" .=$ authAccessToken
+    , "expiration"   .=  authExpiration
+    ]
 
 --------------------------------------------------------------------------------
 

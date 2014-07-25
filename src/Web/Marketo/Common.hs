@@ -113,6 +113,14 @@ pairIf :: ToJSON a =>(a -> Bool) ->  Text -> a -> [Pair]
 pairIf cond name value | cond value = [(name .= value)]
                        | otherwise  = []
 
+-- | Pair from ByteString
+(.=$) :: Text -> ByteString -> Pair
+key .=$ val = key .= TS.decodeUtf8 val
+
+-- | Parse ByteString to Text
+(.:$) :: Object -> Text -> Parser ByteString
+obj .:$ key = TS.encodeUtf8 <$> obj .: key
+
 -- | Parse alternatives: first try 'Right', then 'Left'
 (.:^) :: (FromJSON a, FromJSON b) => Object -> Text -> Parser (Either a b)
 obj .:^ key = Right <$> obj .: key <|> Left <$> obj .: key
