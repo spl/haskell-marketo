@@ -1,6 +1,6 @@
 module Web.Marketo.Leads
   ( getLead
-  , createOrUpdateLead
+  , createOrUpdateLeads
   ) where
 
 --------------------------------------------------------------------------------
@@ -33,8 +33,8 @@ getLead leadId = apiRequest
 -- Note: Unless you use @Just "id"@ in the lookup field, the leadId fields of the
 -- leads parameter are ignored.
 --
--- http://developers.marketo.com/documentation/rest/get-lead-by-id/
-createOrUpdateLead
+-- http://developers.marketo.com/documentation/rest/createupdate-leads/
+createOrUpdateLeads
   :: MonadIO m
   => LeadAction   -- ^ Action such as 'CreateLead' or 'UpdateLead'
   -> [Lead]       -- ^ List of leads to create/update
@@ -43,10 +43,10 @@ createOrUpdateLead
   -> Auth
   -> Manager
   -> m (ApiResponse [Either NoResult LeadId])
-createOrUpdateLead action leads mLookupField = apiRequest
+createOrUpdateLeads action leads mLookupField = apiRequest
   ["rest", "v1", "leads.json"]
   (setJSONBody POST $ COULRequest action leads mLookupField)
-  (fromJSONResponse "createOrUpdateLead" >=> fmap (map fromCOULResponse) >>> return)
+  (fromJSONResponse "createOrUpdateLeads" >=> fmap (map fromCOULResponse) >>> return)
 
 --------------------------------------------------------------------------------
 
