@@ -1,6 +1,6 @@
 name:                   marketo
 version:                0.0.0
-synopsis:               Implementation of parts of the Marketo REST API
+synopsis:               Implementation of parts of the Marketo REST and SOAP APIs
 homepage:               https://www.github.com/docmunch/haskell-marketo
 license:                MIT
 license-file:           LICENSE
@@ -37,16 +37,26 @@ library
   other-modules:
                         Web.Marketo.Common
                         Web.Marketo.Internal
+                        Web.Marketo.SOAP.Common
+                        Web.Marketo.SOAP.Internal
   build-depends:
                         aeson >= 0.7,
                         base >= 4.6 && < 4.8,
+                        base16-bytestring,
                         bytestring,
+                        cryptohash >= 0.11 && < 0.12,
                         http-client >= 0.3,
+                        http-client-tls,
                         http-conduit >= 2.0 && < 3.0,
                         http-types,
                         mime-types,
+                        old-locale,
+                        soap >= 0.2 && < 0.3,
+                        -- soap-tls,
                         template-haskell,
                         text >= 0.11 && < 2.0,
                         time,
                         transformers,
-                        unordered-containers
+                        unordered-containers,
+                        xml-conduit-writer >= 0.1 && < 0.2
+                        -- xml-types
