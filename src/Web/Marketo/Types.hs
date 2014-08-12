@@ -1,5 +1,6 @@
 module Web.Marketo.Types
-  ( ApiAccess(..)
+  ( AppId(..)
+  , ApiAccess(..)
   , Auth(..)
   , ApiResponse(..)
   , NoResult(..)

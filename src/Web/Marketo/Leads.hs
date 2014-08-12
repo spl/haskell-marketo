@@ -19,6 +19,7 @@ import Web.Marketo.Internal
 getLead
   :: MonadIO m
   => LeadId
+  -> AppId
   -> ApiAccess
   -> Auth
   -> Manager
@@ -39,6 +40,7 @@ createOrUpdateLeads
   => LeadAction   -- ^ Action such as 'CreateLead' or 'UpdateLead'
   -> [LeadUpdate] -- ^ List of lead updates
   -> Maybe Text   -- ^ Lookup field for updates (e.g. "id", "email", etc.)
+  -> AppId
   -> ApiAccess
   -> Auth
   -> Manager

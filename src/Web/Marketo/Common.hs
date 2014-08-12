@@ -53,7 +53,6 @@ import Data.Time.Clock
 import Data.Time.Clock.POSIX
 import Language.Haskell.TH (Name, Q, Dec)
 import Network.HTTP.Conduit hiding (parseUrl)
-import qualified Network.HTTP.Conduit as C
 import Network.HTTP.Types
 import Network.Mime (MimeType)
 
@@ -130,10 +129,6 @@ obj .:^ key = Right <$> obj .: key <|> Left <$> obj .: key
 obj .:* key = obj .: key <|> return []
 
 --------------------------------------------------------------------------------
-
--- | Parse a list of /-intercalated items starting with the domain
-parseUrl :: MonadIO m => [ByteString] -> m Request
-parseUrl = liftIO . C.parseUrl . showBS . BS.intercalate "/" . (:) "https:/"
 
 urlEncodeText :: Bool -> Text -> Text
 urlEncodeText isQuery = TS.decodeUtf8 . urlEncode isQuery . TS.encodeUtf8

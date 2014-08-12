@@ -3,8 +3,11 @@ module Web.Marketo.Internal where
 --------------------------------------------------------------------------------
 
 import Web.Marketo.Common
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as H
+import qualified Data.Text.Encoding as TS
+import qualified Network.HTTP.Conduit as C
 
 --------------------------------------------------------------------------------
 
@@ -17,12 +20,13 @@ apiRequest
   => [ByteString]                     -- ^ Path segments, intercalated with '/'
   -> (Request -> m Request)           -- ^ Modify request
   -> (Response BL.ByteString -> m a)  -- ^ Process response
+  -> AppId                            -- ^ Client app ID
   -> ApiAccess                        -- ^ For the REST API domain
   -> Auth                             -- ^ For the access token
   -> Manager
   -> m a
-apiRequest pathSegments modifyRequest processResponse ApiAccess {..} Auth {..} mgr =
-  parseUrl (apiDomain : pathSegments)
+apiRequest pathSegments modifyRequest processResponse appId ApiAccess {..} Auth {..} mgr =
+  parseUrl appId pathSegments
   >>= acceptJSON
   >>= addHeader (hAuthorization, "Bearer " <> authAccessToken)
   >>= modifyRequest
@@ -44,11 +48,39 @@ type Email = Text
 
 --------------------------------------------------------------------------------
 
--- | API access information
+-- | App ID
+--
+-- This is the identifier for a Marketo client application. It is called the
+-- Munchkin account ID in some places, but it is also used as the subdomain for
+-- the REST API endpoint (e.g. the "100-AEK-913" in
+-- "https://100-AEK-913.mktorest.com/rest").
+--
+-- Note: Use the 'IsString' instance (e.g. with @OverloadedStrings@) for easy
+-- construction.
+newtype AppId = AppId { fromAppId :: ByteString }
+  deriving IsString
+
+instance Show AppId where
+  show = showBS . fromAppId
+
+instance ToJSON AppId where
+  toJSON = String . TS.decodeUtf8 . fromAppId
+
+instance FromJSON AppId where
+  parseJSON = fmap (AppId . TS.encodeUtf8) . parseJSON
+
+-- | Parse a list of /-intercalated items starting with the domain
+parseUrl :: MonadIO m => AppId -> [ByteString] -> m Request
+parseUrl appId segments = liftIO $ C.parseUrl $ showBS $ mconcat
+  ["https://", fromAppId appId, ".mktorest.com/", BS.intercalate "/" segments]
+
+--------------------------------------------------------------------------------
+
+-- | API access information provided by a Marketo administrator who enables this
+-- code to access the Marketo API for their data.
 data ApiAccess = ApiAccess
   { apiClientId     :: !ByteString  -- ^ OAuth client ID
   , apiClientSecret :: !ByteString  -- ^ OAuth client secret
-  , apiDomain       :: !ByteString  -- ^ Domain for REST API (i.e. the URL minus protocol and path)
   }
   deriving Show
 
@@ -56,13 +88,11 @@ instance FromJSON ApiAccess where
   parseJSON = withObject "ApiAccess" $ \o ->
     ApiAccess <$> o .:$ "client_id"
               <*> o .:$ "client_secret"
-              <*> o .:$ "domain"
 
 instance ToJSON ApiAccess where
   toJSON ApiAccess {..} = object
     [ "client_id"     .=$ apiClientId
     , "client_secret" .=$ apiClientSecret
-    , "domain"        .=$ apiDomain
     ]
 
 --------------------------------------------------------------------------------
