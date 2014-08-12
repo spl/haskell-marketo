@@ -120,16 +120,19 @@ instance ToJSON Auth where
 -- | Metadata wrapper for a response from the Marketo API
 data ApiResponse a = ApiResponse
   { rspRequestId  :: !Text
-  , rspSuccess    :: !Bool
-  , rspResult     :: !a
+  , rspResult     :: !(Either [ErrorMessage] a)
   }
   deriving (Show, Functor)
 
 instance FromJSON a => FromJSON (ApiResponse a) where
   parseJSON = withObject "ApiResponse" $ \o -> do
-    ApiResponse <$> o .: "requestId"
-                <*> o .: "success"
-                <*> o .: "result"
+    success <- o .: "success"
+    if success then
+      ApiResponse <$> o .: "requestId"
+                  <*> (Right <$> o .: "result")
+    else
+      ApiResponse <$> o .: "requestId"
+                  <*> (Left <$> o .: "errors")
 
 --------------------------------------------------------------------------------
 
