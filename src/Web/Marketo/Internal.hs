@@ -175,7 +175,8 @@ instance FromJSON LeadId where
 -- 'leadObject'.
 data Lead = Lead
   { leadId         :: !LeadId
-  , leadEmail      :: !Email
+  , leadEmail      :: !(Maybe Email)  -- ^ This field is supposed to be required
+                    -- by Marketo, but it is possible to have a lead without it.
   , leadObject     :: !Object  -- ^ The entire object
   }
   deriving Show
