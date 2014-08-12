@@ -42,6 +42,8 @@ library
                         base >= 4.6 && < 4.8,
                         bytestring,
                         http-client >= 0.3,
+                        -- For debugging:
+                        -- http-client-tls,
                         http-conduit >= 2.0 && < 3.0,
                         http-types,
                         mime-types,

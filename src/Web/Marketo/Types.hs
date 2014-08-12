@@ -7,6 +7,8 @@ module Web.Marketo.Types
   , Email
   , LeadId(..)
   , Lead(..)
+  , LeadField(..)
+  , LeadUpdate(..)
   , LeadAction(..)
   ) where
 

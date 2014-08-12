@@ -26,6 +26,14 @@ apiRequest pathSegments modifyRequest processResponse ApiAccess {..} Auth {..} m
   >>= acceptJSON
   >>= addHeader (hAuthorization, "Bearer " <> authAccessToken)
   >>= modifyRequest
+{-
+  -- Debugging code for request body
+  >>= (modifyRequest >=> (\r -> do
+    liftIO (putStrLn $ show r)
+    let RequestBodyLBS body = requestBody r
+    liftIO (putStrLn $ "Request body: " ++ show body)
+    return r))
+-}
   >>= flip httpLbs mgr
   >>= processResponse
 
@@ -142,17 +150,28 @@ data Lead = Lead
   }
   deriving Show
 
-instance ToJSON Lead where
-  toJSON Lead {..} =
-    -- The leadObject may be empty. We assume the leadId and leadEmail are
-    -- preferred over whatever is in the leadObject.
-    Object $ leadObject <> H.fromList ["id" .= leadId, "email" .= leadEmail]
-
 instance FromJSON Lead where
   parseJSON = withObject "Lead" $ \o ->
     Lead <$> o .: "id"
          <*> o .: "email"
          <*> return o
+
+--------------------------------------------------------------------------------
+
+-- | Lead field key/value pair for creates or updates
+data LeadField = LeadField
+  { leadFieldName    :: !Text
+  , leadFieldValue   :: !Value
+  }
+  deriving Show
+
+-- | A lead update contains all the fields to be updated for a single lead
+newtype LeadUpdate = LeadUpdate { leadUpdateFields :: [LeadField] }
+  deriving Show
+
+instance ToJSON LeadUpdate where
+  toJSON = Object . H.fromList .
+    map (\LeadField {..} -> (leadFieldName, leadFieldValue)) . leadUpdateFields
 
 --------------------------------------------------------------------------------
 

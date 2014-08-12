@@ -37,15 +37,15 @@ getLead leadId = apiRequest
 createOrUpdateLeads
   :: MonadIO m
   => LeadAction   -- ^ Action such as 'CreateLead' or 'UpdateLead'
-  -> [Lead]       -- ^ List of leads to create/update
-  -> Maybe Text   -- ^ Lookup field for updates (e.g. Use "id" to match the leadId)
+  -> [LeadUpdate] -- ^ List of lead updates
+  -> Maybe Text   -- ^ Lookup field for updates (e.g. "id", "email", etc.)
   -> ApiAccess
   -> Auth
   -> Manager
   -> m (ApiResponse [Either NoResult LeadId])
-createOrUpdateLeads action leads mLookupField = apiRequest
+createOrUpdateLeads action leadUpdates mLookupField = apiRequest
   ["rest", "v1", "leads.json"]
-  (setJSONBody POST $ COULRequest action leads mLookupField)
+  (setJSONBody POST $ COULRequest action leadUpdates mLookupField)
   (fromJSONResponse "createOrUpdateLeads" >=> fmap (map fromCOULResponse) >>> return)
 
 --------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ createOrUpdateLeads action leads mLookupField = apiRequest
 -- | Create or update lead request
 data COULRequest = COULRequest
   { _coulrAction       :: !LeadAction
-  , _coulrInput        :: ![Lead]
+  , _coulrInput        :: ![LeadUpdate]
   , _coulrlookupField  :: !(Maybe Text)
   }
 
