@@ -20,12 +20,12 @@ apiRequest
   => [ByteString]                     -- ^ Path segments, intercalated with '/'
   -> (Request -> m Request)           -- ^ Modify request
   -> (Response BL.ByteString -> m a)  -- ^ Process response
-  -> AppId                            -- ^ Client app ID
-  -> ApiAccess                        -- ^ For the REST API domain
+  -> AppId                            -- ^ App ID
+  -> ApiClient                        -- ^ Client ID and secret
   -> Auth                             -- ^ For the access token
   -> Manager
   -> m a
-apiRequest pathSegments modifyRequest processResponse appId ApiAccess {..} Auth {..} mgr =
+apiRequest pathSegments modifyRequest processResponse appId ApiClient {..} Auth {..} mgr =
   parseUrl appId pathSegments
   >>= acceptJSON
   >>= addHeader (hAuthorization, "Bearer " <> authAccessToken)
@@ -76,21 +76,23 @@ parseUrl appId segments = liftIO $ C.parseUrl $ showBS $ mconcat
 
 --------------------------------------------------------------------------------
 
--- | API access information provided by a Marketo administrator who enables this
--- code to access the Marketo API for their data.
-data ApiAccess = ApiAccess
+-- | API client access information provided by a Marketo account administrator.
+-- This is used to get the Auth access token.
+--
+-- http://developers.marketo.com/documentation/rest/custom-service/
+data ApiClient = ApiClient
   { apiClientId     :: !ByteString  -- ^ OAuth client ID
   , apiClientSecret :: !ByteString  -- ^ OAuth client secret
   }
   deriving Show
 
-instance FromJSON ApiAccess where
-  parseJSON = withObject "ApiAccess" $ \o ->
-    ApiAccess <$> o .:$ "client_id"
+instance FromJSON ApiClient where
+  parseJSON = withObject "ApiClient" $ \o ->
+    ApiClient <$> o .:$ "client_id"
               <*> o .:$ "client_secret"
 
-instance ToJSON ApiAccess where
-  toJSON ApiAccess {..} = object
+instance ToJSON ApiClient where
+  toJSON ApiClient {..} = object
     [ "client_id"     .=$ apiClientId
     , "client_secret" .=$ apiClientSecret
     ]
@@ -98,6 +100,8 @@ instance ToJSON ApiAccess where
 --------------------------------------------------------------------------------
 
 -- | Authentication information
+--
+-- http://developers.marketo.com/documentation/rest/authentication/
 data Auth = Auth
   { authAccessToken  :: !ByteString   -- ^ OAuth access token
   , authExpiration   :: !UTCTime      -- ^ Expiration time of the access token

@@ -17,10 +17,10 @@ import qualified Data.Text.Encoding as TS
 getAuth
   :: MonadIO m
   => AppId
-  -> ApiAccess
+  -> ApiClient
   -> Manager
   -> m Auth
-getAuth appId ApiAccess {..} mgr =
+getAuth appId ApiClient {..} mgr =
   parseUrl appId ["identity", "oauth", "token"]
   >>= acceptJSON
   >>= setQuery [ ( "grant_type"    , Just "client_credentials" )
@@ -36,7 +36,7 @@ getAuth appId ApiAccess {..} mgr =
 refreshAuth
   :: MonadIO m
   => AppId
-  -> ApiAccess
+  -> ApiClient
   -> Auth
   -> Manager
   -> m (Maybe Auth)
@@ -50,9 +50,9 @@ refreshAuth appId apiAccess Auth {..} mgr = do
 -- updated, along with the result of the argument.
 withRefresh
   :: MonadIO m
-  => (AppId -> ApiAccess -> Auth -> Manager -> m a)
+  => (AppId -> ApiClient -> Auth -> Manager -> m a)
   -> AppId
-  -> ApiAccess
+  -> ApiClient
   -> Auth
   -> Manager
   -> m (Maybe Auth, a)

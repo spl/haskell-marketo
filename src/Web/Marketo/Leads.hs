@@ -20,7 +20,7 @@ getLead
   :: MonadIO m
   => LeadId
   -> AppId
-  -> ApiAccess
+  -> ApiClient
   -> Auth
   -> Manager
   -> m (ApiResponse [Lead])
@@ -41,7 +41,7 @@ createOrUpdateLeads
   -> [LeadUpdate] -- ^ List of lead updates
   -> Maybe Text   -- ^ Lookup field for updates (e.g. "id", "email", etc.)
   -> AppId
-  -> ApiAccess
+  -> ApiClient
   -> Auth
   -> Manager
   -> m (ApiResponse [Either NoResult LeadId])
