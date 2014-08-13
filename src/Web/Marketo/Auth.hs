@@ -40,10 +40,10 @@ refreshAuth
   -> Auth
   -> Manager
   -> m (Maybe Auth)
-refreshAuth appId apiAccess Auth {..} mgr = do
+refreshAuth appId apiClient Auth {..} mgr = do
   tm <- liftIO getCurrentTime
   let expired = authExpiration `diffUTCTime` tm < 5 * 60 {- 5 minutes -}
-  if expired then Just `liftM` getAuth appId apiAccess mgr else return Nothing
+  if expired then Just `liftM` getAuth appId apiClient mgr else return Nothing
 
 -- | Given a function that requires authentication, first refresh the access
 -- token, if needed. Then, run the function argument. Return the new 'Auth', if
@@ -56,9 +56,9 @@ withRefresh
   -> Auth
   -> Manager
   -> m (Maybe Auth, a)
-withRefresh run appId apiAccess auth mgr = do
-  mAuth' <- refreshAuth appId apiAccess auth mgr
-  result <- run appId apiAccess (fromMaybe auth mAuth') mgr
+withRefresh run appId apiClient auth mgr = do
+  mAuth' <- refreshAuth appId apiClient auth mgr
+  result <- run appId apiClient (fromMaybe auth mAuth') mgr
   return (mAuth', result)
 
 --------------------------------------------------------------------------------
